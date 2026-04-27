@@ -7,6 +7,7 @@ const fs = require("fs");
 const app = express();
 const upload = multer({ dest: "uploads/" });
 
+// Catbox upload
 async function uploadToCatbox(filePath) {
   try {
     const form = new FormData();
@@ -25,11 +26,12 @@ async function uploadToCatbox(filePath) {
     );
 
     return res.data.trim();
-  } catch {
+  } catch (e) {
     return null;
   }
 }
 
+// Uguu fallback
 async function uploadToUguu(filePath) {
   try {
     const form = new FormData();
@@ -40,32 +42,42 @@ async function uploadToUguu(filePath) {
     });
 
     return res.data.files[0].url;
-  } catch {
+  } catch (e) {
     return null;
   }
 }
 
+// Upload route
 app.post("/upload", upload.single("file"), async (req, res) => {
   const filePath = req.file.path;
 
   let url = await uploadToCatbox(filePath);
 
   if (!url) {
-    console.log("Catbox failed, using Uguu...");
+    console.log("Catbox failed → using Uguu");
     url = await uploadToUguu(filePath);
   }
 
   fs.unlinkSync(filePath);
 
   if (!url) {
-    return res.json({ status: false, message: "Upload failed" });
+    return res.json({
+      status: false,
+      message: "Upload failed"
+    });
   }
 
-  res.json({ status: true, url });
+  res.json({
+    status: true,
+    url: url
+  });
 });
 
+// test route
 app.get("/", (req, res) => {
-  res.send("Uploader API Running 🚀");
+  res.send("🚀 Catbox API Running Fine");
 });
 
-app.listen(3000, () => console.log("Server running on port 3000"));
+// Render port fix
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log("Server running on", PORT));
