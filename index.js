@@ -7,7 +7,6 @@ const fs = require("fs");
 const app = express();
 const upload = multer({ dest: "uploads/" });
 
-// Catbox upload
 async function uploadToCatbox(filePath) {
   try {
     const form = new FormData();
@@ -26,12 +25,11 @@ async function uploadToCatbox(filePath) {
     );
 
     return res.data.trim();
-  } catch (e) {
+  } catch {
     return null;
   }
 }
 
-// Uguu fallback
 async function uploadToUguu(filePath) {
   try {
     const form = new FormData();
@@ -42,19 +40,17 @@ async function uploadToUguu(filePath) {
     });
 
     return res.data.files[0].url;
-  } catch (e) {
+  } catch {
     return null;
   }
 }
 
-// Upload route
 app.post("/upload", upload.single("file"), async (req, res) => {
   const filePath = req.file.path;
 
   let url = await uploadToCatbox(filePath);
 
   if (!url) {
-    console.log("Catbox failed → using Uguu");
     url = await uploadToUguu(filePath);
   }
 
@@ -69,15 +65,13 @@ app.post("/upload", upload.single("file"), async (req, res) => {
 
   res.json({
     status: true,
-    url: url
+    url
   });
 });
 
-// test route
 app.get("/", (req, res) => {
-  res.send("🚀 Catbox API Running Fine");
+  res.send("Catbox API Running");
 });
 
-// Render port fix
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log("Server running on", PORT));
+app.listen(PORT, () => console.log(PORT));
